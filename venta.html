@@ -148,11 +148,14 @@
     document.addEventListener('DOMContentLoaded', function() {
         const soldList = document.getElementById('soldList');
 
-        // Cargar productos vendidos desde localStorage
-        function loadSoldItems() {
-            const soldItems = JSON.parse(localStorage.getItem('soldItems')) || [];
+        // Datos de ejemplo (puedes reemplazarlos con datos reales de localStorage)
+        const soldItems = [
+            { name: "Producto 1", code: "123", barcode: "456", price: 100, discount: 10, description: "Descripción", category: "Categoría", quantitySold: 2 },
+            { name: "Producto 2", code: "124", barcode: "457", price: 200, discount: 5, description: "Descripción", category: "Categoría", quantitySold: 3 }
+        ];
 
-            // Renderizar la tabla de productos vendidos
+        // Cargar productos vendidos
+        function loadSoldItems() {
             soldList.innerHTML = soldItems.map((item, index) => {
                 const priceWithDiscount = item.price - (item.price * (item.discount / 100));
                 return `
@@ -174,9 +177,7 @@
 
         // Eliminar un producto
         window.deleteItem = function(index) {
-            const soldItems = JSON.parse(localStorage.getItem('soldItems')) || [];
             soldItems.splice(index, 1); // Eliminar el producto seleccionado
-            localStorage.setItem('soldItems', JSON.stringify(soldItems));
             loadSoldItems(); // Recargar la tabla
         }
 
@@ -186,16 +187,12 @@
 
     // Función para generar el archivo Excel
     function generateExcel() {
-        const soldItems = JSON.parse(localStorage.getItem('soldItems')) || [];
+        const soldItems = [
+            { name: "Producto 1", code: "123", barcode: "456", price: 100, discount: 10, description: "Descripción", category: "Categoría", quantitySold: 2 },
+            { name: "Producto 2", code: "124", barcode: "457", price: 200, discount: 5, description: "Descripción", category: "Categoría", quantitySold: 3 }
+        ];
 
-        // Verificar si hay productos en localStorage
-        if (soldItems.length === 0) {
-            alert("No hay productos vendidos para generar el Excel.");
-            return;
-        }
-
-        // Crear la hoja de trabajo
-        const ws = XLSX.utils.aoa_to_sheet([ 
+        const ws = XLSX.utils.aoa_to_sheet([
             ['Nombre', 'Código', 'Código de Barras', 'Precio', 'Descuento (%)', 'Precio Con Descuento', 'Descripción', 'Categoría', 'Cantidad Vendida'],
             ...soldItems.map(item => {
                 const priceWithDiscount = item.price - (item.price * (item.discount / 100));
@@ -213,11 +210,9 @@
             })
         ]);
 
-        // Crear un libro de trabajo
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Productos Vendidos");
 
-        // Generar y guardar el archivo Excel
         XLSX.writeFile(wb, "productos_vendidos.xlsx");
     }
 

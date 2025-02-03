@@ -65,8 +65,8 @@
             font-size: 18px;
             font-weight: bold;
             text-align: center;
-            width: 35px;  /* Menú más pequeño */
-            height: 35px; /* Menú más pequeño */
+            width: 35px;
+            height: 35px;
         }
         #menu {
             position: fixed;
@@ -74,7 +74,7 @@
             right: 0;
             background-color: #333;
             color: white;
-            width: 150px; /* Menú más estrecho */
+            width: 150px;
             height: 100%;
             transform: translateX(100%);
             transition: transform 0.3s ease;
@@ -83,9 +83,9 @@
         #menu a {
             display: block;
             color: white;
-            padding: 8px 16px; /* Menú más pequeño */
+            padding: 8px 16px;
             text-decoration: none;
-            font-size: 14px; /* Fuente más pequeña */
+            font-size: 14px;
         }
         #menu a:hover {
             background-color: #575757;
@@ -94,7 +94,6 @@
             transform: translateX(0);
         }
     </style>
-    <!-- Agregar la librería XLSX -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
 </head>
 <body>
@@ -117,7 +116,6 @@
                     <th>Descripción</th>
                     <th>Categoría</th>
                     <th>Cantidad Vendida</th>
-                    <th>Acciones</th>
                 </tr>
             </thead>
             <tbody id="soldList">
@@ -125,11 +123,10 @@
             </tbody>
         </table>
     </div>
-    <!-- Botón para descargar en Excel -->
+
     <button class="ok-btn" onclick="generateExcel()">Descargar en Excel</button>
 </div>
 
-<!-- Menú plegable -->
 <button id="menu-btn" onclick="toggleMenu(event)">=</button>
 
 <div id="menu">
@@ -148,88 +145,74 @@
     document.addEventListener('DOMContentLoaded', function() {
         const soldList = document.getElementById('soldList');
 
-        // Cargar productos vendidos desde el servidor
-        fetch('/api/productos-vendidos') // Aquí se hace una llamada a tu API
-            .then(response => response.json())
-            .then(data => {
-                // Genera la tabla con los datos recibidos
-                loadSoldItems(data);
-            })
-            .catch(error => console.error('Error al cargar los productos:', error));
+        // Aquí debes reemplazar esta parte con tu API para cargar productos vendidos
+        const soldItems = [
+            { name: "Anillo de Oro", code: "123", barcode: "456", price: 100, discount: 10, description: "Anillo elegante", category: "Joyería", quantitySold: 2 },
+            { name: "Collar de Plata", code: "124", barcode: "457", price: 150, discount: 5, description: "Collar brillante", category: "Joyería", quantitySold: 3 }
+        ];
 
-        // Función para cargar los productos vendidos
-        function loadSoldItems(soldItems) {
-            soldList.innerHTML = soldItems.map((item, index) => {
+        // Genera la tabla con los productos vendidos
+        loadSoldItems(soldItems);
+
+        function loadSoldItems(items) {
+            soldList.innerHTML = items.map(item => {
                 const priceWithDiscount = item.price - (item.price * (item.discount / 100));
                 return `
                     <tr>
                         <td>${item.name}</td>
                         <td>${item.code}</td>
                         <td>${item.barcode}</td>
-                        <td>${item.price}</td>
+                        <td>${item.price.toFixed(2)}</td>
                         <td>${item.discount ? item.discount : 0}%</td>
                         <td>${priceWithDiscount.toFixed(2)}</td>
                         <td>${item.description}</td>
                         <td>${item.category}</td>
                         <td>${item.quantitySold}</td>
-                        <td><span class="delete-btn" onclick="deleteItem(${index})">Eliminar</span></td>
                     </tr>
                 `;
             }).join('');
         }
 
-        // Eliminar un producto
-        window.deleteItem = function(index) {
-            soldItems.splice(index, 1); // Eliminar el producto seleccionado
-            loadSoldItems(); // Recargar la tabla
+        // Función para generar el archivo Excel
+        function generateExcel() {
+            const ws = XLSX.utils.aoa_to_sheet([ 
+                ['Nombre', 'Código', 'Código de Barras', 'Precio', 'Descuento (%)', 'Precio Con Descuento', 'Descripción', 'Categoría', 'Cantidad Vendida'],
+                ...soldItems.map(item => {
+                    const priceWithDiscount = item.price - (item.price * (item.discount / 100));
+                    return [
+                        item.name,
+                        item.code,
+                        item.barcode,
+                        item.price.toFixed(2),
+                        item.discount ? item.discount : 0,
+                        priceWithDiscount.toFixed(2),
+                        item.description,
+                        item.category,
+                        item.quantitySold
+                    ];
+                })
+            ]);
+
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Productos Vendidos");
+
+            XLSX.writeFile(wb, "productos_vendidos.xlsx");
+        }
+
+        // Función para mostrar/ocultar el menú
+        function toggleMenu(event) {
+            const menu = document.getElementById('menu');
+            menu.classList.toggle('open');
+            event.stopPropagation();
+
+            document.addEventListener('click', function closeMenu(e) {
+                if (!menu.contains(e.target) && e.target !== document.getElementById('menu-btn')) {
+                    menu.classList.remove('open');
+                    document.removeEventListener('click', closeMenu);
+                }
+            });
         }
     });
-
-    // Función para generar el archivo Excel
-    function generateExcel() {
-        const soldItems = [
-            { name: "Producto 1", code: "123", barcode: "456", price: 100, discount: 10, description: "Descripción", category: "Categoría", quantitySold: 2 },
-            { name: "Producto 2", code: "124", barcode: "457", price: 200, discount: 5, description: "Descripción", category: "Categoría", quantitySold: 3 }
-        ];
-
-        const ws = XLSX.utils.aoa_to_sheet([
-            ['Nombre', 'Código', 'Código de Barras', 'Precio', 'Descuento (%)', 'Precio Con Descuento', 'Descripción', 'Categoría', 'Cantidad Vendida'],
-            ...soldItems.map(item => {
-                const priceWithDiscount = item.price - (item.price * (item.discount / 100));
-                return [
-                    item.name,
-                    item.code,
-                    item.barcode,
-                    item.price.toFixed(2),
-                    item.discount ? item.discount : 0,
-                    priceWithDiscount.toFixed(2),
-                    item.description,
-                    item.category,
-                    item.quantitySold
-                ];
-            })
-        ]);
-
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Productos Vendidos");
-
-        XLSX.writeFile(wb, "productos_vendidos.xlsx");
-    }
-
-    // Función para mostrar/ocultar el menú
-    function toggleMenu(event) {
-        const menu = document.getElementById('menu');
-        menu.classList.toggle('open');
-        event.stopPropagation(); // Evita que el clic en el botón cierre el menú
-
-        // Cerrar el menú si se hace clic en cualquier parte fuera del menú
-        document.addEventListener('click', function closeMenu(e) {
-            if (!menu.contains(e.target) && e.target !== document.getElementById('menu-btn')) {
-                menu.classList.remove('open');
-                document.removeEventListener('click', closeMenu); // Eliminar el evento de cierre
-            }
-        });
-    }
 </script>
 
 </body>

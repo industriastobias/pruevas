@@ -148,14 +148,17 @@
     document.addEventListener('DOMContentLoaded', function() {
         const soldList = document.getElementById('soldList');
 
-        // Datos de ejemplo (puedes reemplazarlos con datos reales de localStorage)
-        const soldItems = [
-            { name: "Producto 1", code: "123", barcode: "456", price: 100, discount: 10, description: "Descripción", category: "Categoría", quantitySold: 2 },
-            { name: "Producto 2", code: "124", barcode: "457", price: 200, discount: 5, description: "Descripción", category: "Categoría", quantitySold: 3 }
-        ];
+        // Cargar productos vendidos desde el servidor
+        fetch('/api/productos-vendidos') // Aquí se hace una llamada a tu API
+            .then(response => response.json())
+            .then(data => {
+                // Genera la tabla con los datos recibidos
+                loadSoldItems(data);
+            })
+            .catch(error => console.error('Error al cargar los productos:', error));
 
-        // Cargar productos vendidos
-        function loadSoldItems() {
+        // Función para cargar los productos vendidos
+        function loadSoldItems(soldItems) {
             soldList.innerHTML = soldItems.map((item, index) => {
                 const priceWithDiscount = item.price - (item.price * (item.discount / 100));
                 return `
@@ -180,9 +183,6 @@
             soldItems.splice(index, 1); // Eliminar el producto seleccionado
             loadSoldItems(); // Recargar la tabla
         }
-
-        // Cargar los productos vendidos al iniciar
-        loadSoldItems();
     });
 
     // Función para generar el archivo Excel
